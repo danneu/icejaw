@@ -1,0 +1,62 @@
+// Node
+const Readline = require('readline')
+const Url = require('url')
+const Path = require('path')
+// 3rd
+const gulp = require('gulp')
+const rimraf = require('rimraf')
+const program = require('commander')
+// 1st
+const Crawler = require('./crawler')
+
+program
+  .option('--port <port>', 'server is listening on localhost', (str) => Number.parseInt(str, 10) || 3000, 3000)
+  .option('--concurrency <n>', 'max number of in-flight requests', (str) => Number.parseInt(str, 10) || 8, 8)
+  .option('--public <folder>', 'name of public folder', 'public')
+  .parse(process.argv)
+
+const crawler = new Crawler({
+  port: program.port,
+  concurrency: program.concurrency
+})
+
+// READLINE
+
+const readline = Readline.createInterface({
+  input: process.stdin,
+  terminal: false
+})
+
+readline.on('line', function (line) {
+  const route = Url.parse(line).pathname
+  crawler.push(route)
+})
+
+crawler.stream.on('error', (err) => {
+  console.error('Bailing because of error:', err.message)
+  process.exit(1)
+})
+
+crawler.stream.on('end', () => {
+  console.log('Website generated in the ./build folder')
+})
+
+// GULP
+
+gulp.task('clean', (cb) => {
+  return rimraf('build', cb)
+})
+
+gulp.task('copy', ['clean'], () => {
+  const publicPath = Path.resolve(process.cwd(), program.public)
+  console.log({publicPath})
+  return gulp.src(publicPath + '/**', { follow: true })
+    .pipe(gulp.dest('build'))
+})
+
+gulp.task('default', ['copy'], () => {
+  return crawler.stream
+    .pipe(gulp.dest('build'))
+})
+
+gulp.start()
