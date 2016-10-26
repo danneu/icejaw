@@ -64,3 +64,35 @@ Whether a route ends in a backslash is an important distinction.
 
 This is consistent with, for example, how <https://surge.sh> implements
 clean URL redirection (https://surge.sh/help/using-clean-urls-automatically).
+
+## Route generation
+
+You generally need to query your database to generate a list of routes.
+
+This part is up to you. If you simply print routes to stdout, then you can
+pipe the result directly into icejaw.
+
+``` javascript
+// generate.js
+
+const Promise = require('bluebird')
+
+let routes = [
+  '/',
+  '/users'
+]
+
+Promise.try(() => {
+  return db.getAllUserIds()
+}).then((ids) => {
+  ids.forEach((id) => routes.push(`/users/${id}`))
+}).then(() => {
+  route.forEach((route) => console.log(route))
+}).catch((err) => {
+  console.error(err)
+  process.exit(1)
+})
+
+```
+
+    node generate.js | icejaw
