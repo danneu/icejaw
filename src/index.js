@@ -12,32 +12,12 @@ const gulp = require('gulp')
 // 1st
 const crawler = require('./crawler')
 
-// if user provides the file argument via cli, then
-// this will be set to a readable stream.
-// if not, then we will read from stdin
-let fileStream
-
 program
   .version(require('../package.json').version)
-  .arguments('[file]')
   .option('--port <port>', 'server is listening on localhost', (str) => Number.parseInt(str, 10) || 3000, 3000)
   .option('--concurrency <n>', 'max number of in-flight requests', (str) => Number.parseInt(str, 10) || 8, 8)
   .option('--public <folder>', 'name of public folder', 'public')
-  .action((file) => {
-    const fullPath = Path.resolve(process.cwd(), file)
-    let stats
-    try {
-      stats = fs.statSync(fullPath)
-    } catch (err) {
-      console.log(`"${fullPath}" not found`)
-      process.exit(1)
-    }
-    if (!stats.isFile()) {
-      console.log(`expected "${fullPath}" to be a file`)
-      process.exit(1)
-    }
-    fileStream = fs.createReadStream(fullPath)
-  })
+  .option('--routes <routes>', '(for testing) comma-delimited routes', (str) => str.split(','))
   .parse(process.argv)
 
 
@@ -60,7 +40,7 @@ function intoPaths () {
 }
 
 
-module.exports = function ({ port = program.port, concurrency = program.concurrency, public = program.concurrency } = {}) {
+module.exports = function ({ port = program.port, concurrency = program.concurrency, public = program.concurrency, routes = program.routes } = {}) {
   gulp.task('clean', (cb) => {
     return rimraf('build', cb)
   })
@@ -73,8 +53,13 @@ module.exports = function ({ port = program.port, concurrency = program.concurre
   })
 
   gulp.task('default', ['copy'], () => {
-    const stream = (fileStream || process.stdin)
-      .pipe(es.split())
+    let routeStream
+    if (Array.isArray(routes)) {
+      routeStream = es.readArray(routes)
+    } else {
+      routeStream = process.stdin.pipe(es.split())
+    }
+    const stream = routeStream
       .pipe(dropEmpty())
       .pipe(intoPaths())
       .pipe(crawler({ port, concurrency }))

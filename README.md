@@ -1,11 +1,7 @@
 
 ![skull](skull.png)
 
-# icejaw
-
-[![Build Status](https://travis-ci.org/danneu/icejaw.svg?branch=master)](https://travis-ci.org/danneu/icejaw)
-[![NPM version](https://badge.fury.io/js/icejaw.svg)](http://badge.fury.io/js/icejaw)
-[![Dependency Status](https://david-dm.org/danneu/icejaw.svg)](https://david-dm.org/danneu/icejaw)
+# icejaw [![Build Status](https://travis-ci.org/danneu/icejaw.svg?branch=master)](https://travis-ci.org/danneu/icejaw) [![NPM version](https://badge.fury.io/js/icejaw.svg)](http://badge.fury.io/js/icejaw) [![Dependency Status](https://david-dm.org/danneu/icejaw.svg)](https://david-dm.org/danneu/icejaw)
 
 Generate a static website from a dynamic one.
 
@@ -28,17 +24,15 @@ Icejaw expects a `\n`-delimited list of routes.
     /users/2
     /faq
 
-Either pipe them in to icejaw's stdin:
+Pipe them into icejaw's stdin:
 
     cat routes.txt | icejaw
 
-Or pass icejaw the optional filepath argument:
-
-    icejaw [options] route.txt
 
 Icejaw will send a GET request to each one and save the HTML
 response into the `./build` directory.
-If any response is not a 200, icejaw will exit with an error.
+If any response is not a 200, icejaw will exit with an error
+and no build directory will be created.
 
 Icejaw only cares about the path. `/hello` is equivalent to
 `https://example.com/hello`. For example, your `sitemap.txt`
@@ -69,6 +63,7 @@ file might be sufficient if you have one.
 - `--port <Integer>`: The localhost post that the server is running on. Default: 3000.
 - `--concurrency <Integer>`: The number of in-flight requests to localhost allowed at a time. Default: 8.
 - `--public <String>`: Path to the folder containing static assets to be copied to the build. Maybe be absolute or relative to CWD. Default: "public".
+- `--routes <String>`: Comma-delimited list of routes. Useful for testing/sanity-checking. Example: `--routes /,/foo,/bar`. If this is set, then stdin will be ignored.
 
 ## Static assets
 
