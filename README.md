@@ -77,17 +77,15 @@ pipe the result directly into icejaw.
 
 const Promise = require('bluebird')
 
-let routes = [
+;[
   '/',
   '/users'
-]
+].forEach((route) => console.log(route))
 
 Promise.try(() => {
   return db.getAllUserIds()
 }).then((ids) => {
-  ids.forEach((id) => routes.push(`/users/${id}`))
-}).then(() => {
-  route.forEach((route) => console.log(route))
+  ids.forEach((id) => console.log(`/users/${id}`))
 }).catch((err) => {
   console.error(err)
   process.exit(1)

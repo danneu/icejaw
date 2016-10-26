@@ -14,14 +14,14 @@ function Crawler ({ port, concurrency } = {}) {
   this.endEnqueued = false
   this.queue = queue()
   this.queue.define('request', ({route}) => {
-    return this.request(route)
+    return request(this.localhost, route)
       .catch((err) => this.stream.emit('error', err))
       .then((file) => this.stream.push(file))
   }, { concurrency })
   this.queue.on('finished:request', () => {
     this.enqueued -= 1
     if (this.endEnqueued && this.enqueued === 0) {
-      this.stream.emit('end')
+      this.stream.push(null)
     }
   })
 }
@@ -37,8 +37,8 @@ Crawler.prototype.push = function (route) {
   return this.queue.push('request', { route })
 }
 
-Crawler.prototype.request = function (route) {
-  return fetch(this.localhost + route)
+function request (baseUrl, route) {
+  return fetch(baseUrl + route)
     .then((response) => {
       if (response.status !== 200) {
         console.error(`${chalk.red(response.status)} ${route}`)
@@ -63,5 +63,7 @@ Crawler.prototype.request = function (route) {
       return file
     })
 }
+
+Crawler.request = request
 
 module.exports = Crawler
