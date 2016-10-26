@@ -15,11 +15,6 @@ program
   .option('--public <folder>', 'name of public folder', 'public')
   .parse(process.argv)
 
-const crawler = new Crawler({
-  port: program.port,
-  concurrency: program.concurrency
-})
-
 // READLINE
 
 const readline = Readline.createInterface({
@@ -27,36 +22,41 @@ const readline = Readline.createInterface({
   terminal: false
 })
 
-readline.on('line', function (line) {
-  const route = Url.parse(line).pathname
-  crawler.push(route)
-})
-
-crawler.stream.on('error', (err) => {
-  console.error('Bailing because of error:', err.message)
-  process.exit(1)
-})
-
-crawler.stream.on('end', () => {
-  console.log('Website generated in the ./build folder')
-})
 
 // GULP
 
-gulp.task('clean', (cb) => {
-  return rimraf('build', cb)
-})
+module.exports = function ({ port = program.port, concurrency = program.concurrency, public = program.concurrency } = {}) {
+  const crawler = new Crawler({port, concurrency})
 
-gulp.task('copy', ['clean'], () => {
-  const publicPath = Path.resolve(process.cwd(), program.public)
-  console.log('Static assets copied from:', publicPath)
-  return gulp.src(publicPath + '/**', { follow: true })
-    .pipe(gulp.dest('build'))
-})
+  readline.on('line', function (line) {
+    const route = Url.parse(line).pathname
+    crawler.push(route)
+  })
 
-gulp.task('default', ['copy'], () => {
-  return crawler.stream
-    .pipe(gulp.dest('build'))
-})
+  crawler.stream.on('error', (err) => {
+    console.error('Bailing because of error:', err.message)
+    process.exit(1)
+  })
 
-gulp.start()
+  crawler.stream.on('end', () => {
+    console.log('Website generated in the ./build folder')
+  })
+
+  gulp.task('clean', (cb) => {
+    return rimraf('build', cb)
+  })
+
+  gulp.task('copy', ['clean'], () => {
+    const publicPath = Path.resolve(process.cwd(), program.public)
+    console.log('Static assets copied from:', publicPath)
+    return gulp.src(publicPath + '/**', { follow: true })
+      .pipe(gulp.dest('build'))
+  })
+
+  gulp.task('default', ['copy'], () => {
+    return crawler.stream
+      .pipe(gulp.dest('build'))
+  })
+
+  gulp.start()
+}
