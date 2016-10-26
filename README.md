@@ -20,14 +20,29 @@ It's hopefully a more useful/configurable `wget -r`.
 
 ## Usage
 
-Pipe a `\n`-delimited list of routes to icejaw. Icejaw will send a GET
-request to each one and save the HTML response in the "build" directory.
+Icejaw expects a `\n`-delimited list of routes.
+
+    /
+    /users
+    /users/1
+    /users/2
+    /faq
+
+Either pipe them in to icejaw's stdin:
+
+    cat routes.txt | icejaw
+
+Or pass icejaw the optional filepath argument:
+
+    icejaw [options] route.txt
+
+Icejaw will send a GET request to each one and save the HTML
+response into the `./build` directory.
 If any response is not a 200, icejaw will exit with an error.
 
 Icejaw only cares about the path. `/hello` is equivalent to
-`https://example.com/hello`.
-
-Icejaw will generate a `./build` folder.
+`https://example.com/hello`. For example, your `sitemap.txt`
+file might be sufficient if you have one.
 
     $ node server.js
     Express is listening on http://localhost:3000
