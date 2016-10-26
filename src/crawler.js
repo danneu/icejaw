@@ -1,76 +1,33 @@
-// Node
-const Stream = require('stream')
 // 3rd
-const fetch = require('isomorphic-fetch')
-const File = require('vinyl')
-const chalk = require('chalk')
 const queue = require('promise-task-queue')
+const Promise = require('bluebird')
+const es = require('event-stream')
+// 1st
+const request = require('./request')
 
-function Crawler ({ port, concurrency } = {}) {
-  this.stream = new Stream.Readable({
-    objectMode: true,
-    read: function noop () {}
-  })
-  this.localhost = `http://localhost:${port}`
-  this.enqueued = 0
-  this.closed = false
-  this.endEnqueued = false
-  this.queue = queue()
-  this.queue.define('request', ({route}) => {
-    return request(this.localhost, route)
+
+//
+// Crawler is a stream that reads a stream of file paths
+// and writes a stream of Vinyl Files.
+//
+
+
+function initQueue (concurrency) {
+  const q = queue()
+  q.define('request', ({url}) => {
+    return request(url)
   }, { concurrency })
-  this.queue.on('finished:request', () => {
-    this.enqueued -= 1
-    if (this.endEnqueued && this.enqueued === 0) {
-      this.closed = true
-      this.stream.push(null)
-    }
+  return q
+}
+
+
+module.exports = function crawler ({ port = 3000, concurrency = 8 } = {}) {
+  const queue = initQueue(concurrency)
+  return es.map((route, cb) => {
+    const url = `http://localhost:${port}${route}`
+    //return Promise.try(() => queue.push('request', { url, route }))
+    return queue.push('request', { url })
+      .then((file) => cb(null, file))
+      .catch((err) => cb(err))
   })
 }
-
-// Signals to crawler that no more routes will be read from stdin
-// and it should close the stream once its queue is drained
-Crawler.prototype.end = function () {
-  this.endEnqueued = true
-  if (this.enqueued === 0) this.stream.push(null)
-}
-
-Crawler.prototype.push = function (route) {
-  this.enqueued += 1
-  return this.queue.push('request', { route })
-    .catch((err) => this.stream.emit('error', err))
-    .then((file) => {
-      if (!this.closed) this.stream.push(file)
-    })
-}
-
-function request (baseUrl, route) {
-  return fetch(baseUrl + route)
-    .then((response) => {
-      if (response.status !== 200) {
-        console.error(`${chalk.red(response.status)} ${route}`)
-        throw new Error(`"${route}" did not respond with 200`)
-      }
-      return response.text()
-    })
-    .then((text) => {
-      const contents = Buffer.from(text)
-      let path = route
-      if (path.endsWith('/')) {
-        path += 'index'
-      }
-      path += '.html'
-      console.log(`${chalk.green(200)} ${route} ${chalk.grey('->')} ${path}`)
-      const file = new File({
-        cwd: '/',
-        base: '/',
-        path,
-        contents
-      })
-      return file
-    })
-}
-
-Crawler.request = request
-
-module.exports = Crawler
