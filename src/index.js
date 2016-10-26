@@ -33,6 +33,10 @@ module.exports = function ({ port = program.port, concurrency = program.concurre
     crawler.push(route)
   })
 
+  readline.on('close', () => {
+    crawler.end()
+  })
+
   crawler.stream.on('error', (err) => {
     console.error('Bailing because of error:', err.message)
     process.exit(1)

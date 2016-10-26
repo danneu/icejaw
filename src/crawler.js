@@ -11,6 +11,7 @@ function Crawler ({ port, concurrency } = {}) {
   this.stream._read = function noop () {}
   this.localhost = `http://localhost:${port}`
   this.enqueued = 0
+  this.endEnqueued = false
   this.queue = queue()
   this.queue.define('request', ({route}) => {
     return this.request(route)
@@ -19,10 +20,16 @@ function Crawler ({ port, concurrency } = {}) {
   }, { concurrency })
   this.queue.on('finished:request', () => {
     this.enqueued -= 1
-    if (this.enqueued === 0) {
+    if (this.endEnqueued && this.enqueued === 0) {
       this.stream.emit('end')
     }
   })
+}
+
+// Signals to crawler that no more routes will be read from stdin
+// and it should close the stream once its queue is drained
+Crawler.prototype.end = function () {
+  this.endEnqueued = true
 }
 
 Crawler.prototype.push = function (route) {
