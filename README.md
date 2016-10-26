@@ -3,7 +3,14 @@
 
 # icejaw
 
+[![Build Status](https://travis-ci.org/danneu/icejaw.svg?branch=master)](https://travis-ci.org/danneu/icejaw)
+[![NPM version](https://badge.fury.io/js/icejaw.svg)](http://badge.fury.io/js/icejaw)
+[![Dependency Status](https://david-dm.org/danneu/icejaw.svg)](https://david-dm.org/danneu/icejaw)
+
 Generate a static website from a dynamic one.
+
+Icejaw consumes a stream of localhost routes on stdin, crawls them
+concurrently, and spits the results into a `./build` folder.
 
 It's hopefully a more useful/configurable `wget -r`.
 
