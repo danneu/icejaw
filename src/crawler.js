@@ -7,20 +7,22 @@ const chalk = require('chalk')
 const queue = require('promise-task-queue')
 
 function Crawler ({ port, concurrency } = {}) {
-  this.stream = new Stream.Readable({ objectMode: true })
-  this.stream._read = function noop () {}
+  this.stream = new Stream.Readable({
+    objectMode: true,
+    read: function noop () {}
+  })
   this.localhost = `http://localhost:${port}`
   this.enqueued = 0
+  this.closed = false
   this.endEnqueued = false
   this.queue = queue()
   this.queue.define('request', ({route}) => {
     return request(this.localhost, route)
-      .catch((err) => this.stream.emit('error', err))
-      .then((file) => this.stream.push(file))
   }, { concurrency })
   this.queue.on('finished:request', () => {
     this.enqueued -= 1
     if (this.endEnqueued && this.enqueued === 0) {
+      this.closed = true
       this.stream.push(null)
     }
   })
@@ -30,11 +32,16 @@ function Crawler ({ port, concurrency } = {}) {
 // and it should close the stream once its queue is drained
 Crawler.prototype.end = function () {
   this.endEnqueued = true
+  if (this.enqueued === 0) this.stream.push(null)
 }
 
 Crawler.prototype.push = function (route) {
   this.enqueued += 1
   return this.queue.push('request', { route })
+    .catch((err) => this.stream.emit('error', err))
+    .then((file) => {
+      if (!this.closed) this.stream.push(file)
+    })
 }
 
 function request (baseUrl, route) {
