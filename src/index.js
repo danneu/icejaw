@@ -49,7 +49,7 @@ gulp.task('clean', (cb) => {
 
 gulp.task('copy', ['clean'], () => {
   const publicPath = Path.resolve(process.cwd(), program.public)
-  console.log({publicPath})
+  console.log('Static assets copied from:', publicPath)
   return gulp.src(publicPath + '/**', { follow: true })
     .pipe(gulp.dest('build'))
 })
