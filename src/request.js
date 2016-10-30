@@ -1,4 +1,5 @@
 const Url = require('url')
+const Path = require('path')
 // 3rd
 const fetch = require('isomorphic-fetch')
 const File = require('vinyl')
@@ -21,9 +22,11 @@ function request (url) {
       const contents = Buffer.from(text)
       let path = route
       if (path.endsWith('/')) {
-        path += 'index'
+        path += 'index.html'
       }
-      path += '.html'
+      if (!Path.extname(path)) {
+        path += '.html'
+      }
       console.log(`${chalk.green(200)} ${route} ${chalk.grey('->')} ${path}`)
       const file = new File({
         cwd: '/',

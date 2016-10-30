@@ -17,6 +17,9 @@ router
   .get('/foo', function * () {
     this.body = 'hello foo'
   })
+  .get('/example.json', function * () {
+    this.body = { ok: true }
+  })
 app.use(router.routes())
 app.listen(5000)
 
@@ -86,9 +89,40 @@ test.serial('/foo/ becomes /foo/index.html', async (t) => {
 
 // =========================================================
 
+
+// EXTENSIONS
+
+
+test.serial('adds .html if there is no extension', async (t) => {
+  await spawnIcejaw(['--routes', '/foo'])
+  t.true(await exists('./build/foo.html'))
+})
+
+
+test.serial('does not add extension if one exists', async (t) => {
+  await spawnIcejaw(['--routes', '/example.json'])
+  t.true(await exists('./build/example.json'))
+})
+
+
+// =========================================================
+
+
+// resolves string
 function read (path) {
   return fs.readFileAsync(path, { encoding: 'utf8' })
 }
+
+
+// resolves bool
+async function exists (path) {
+  try {
+    return !!(await fs.statAsync(path))
+  } catch (err) {
+    return false
+  }
+}
+
 
 function spawnIcejaw (args = []) {
   args.push('--port')
