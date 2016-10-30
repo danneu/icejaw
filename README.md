@@ -101,15 +101,15 @@ You generally need to query your database to generate a list of routes.
 This part is up to you. If you simply print routes to stdout, then you can
 pipe the result directly into icejaw.
 
+Print out routes as soon as you have them so icejaw can consume them
+faster.
+
 ``` javascript
 // generate.js
 
 const Promise = require('bluebird')
 
-;[
-  '/',
-  '/users'
-].forEach((route) => console.log(route))
+['/', '/users', '/faq', '/about-us'].forEach((route) => console.log(route))
 
 Promise.try(() => {
   return db.getAllUserIds()

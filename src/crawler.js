@@ -14,9 +14,7 @@ const request = require('./request')
 
 function initQueue (concurrency) {
   const q = queue()
-  q.define('request', ({url}) => {
-    return request(url)
-  }, { concurrency })
+  q.define('request', ({url}) => request(url), { concurrency })
   return q
 }
 
