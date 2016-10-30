@@ -1,35 +1,32 @@
 
 const test = require('ava')
-const request = require('../src/request')
-const app = require('koa')()
-const Router = require('koa-router')
+// Node
 const spawn = require('child_process').spawn
+// 3rd
+const koa = require('koa')
+const Router = require('koa-router')
 const Promise = require('bluebird')
 const fs = Promise.promisifyAll(require('fs'))
-const rimraf = Promise.promisify(require('rimraf'))
+const temp = Promise.promisifyAll(require('temp').track())
+// 1st
+const request = require('../src/request')
 
+
+// TEST SERVER
+
+
+const app = koa()
 const router = new Router()
 
 router
-  .get('/', function * () {
-    this.body = 'hello world'
-  })
-  .get('/foo', function * () {
-    this.body = 'hello foo'
-  })
-  .get('/example.json', function * () {
-    this.body = { ok: true }
-  })
+  .get('/', function * () { this.body = 'hello world' })
+  .get('/foo', function * () { this.body = 'hello foo' })
+  .get('/example.json', function * () { this.body = { ok: true } })
 app.use(router.routes())
 app.listen(5000)
 
 const url = (route) => `http://localhost:5000${route}`
 
-// =========================================================
-
-test.afterEach.always('cleanup build directory', async () => {
-  await rimraf('./build')
-})
 
 // =========================================================
 
@@ -55,36 +52,35 @@ test('no trailing slash becomes {route}.html', async (t) => {
   t.is(result.path, '/foo.html')
 })
 
-// Serial tests that touch the filesystem since the
-// rimraf('./build') will cause issues
-// TODO: Figure out how to run concurrently
-
-test.serial('should pass on 200 and create ./build', async (t) => {
+test('should pass on 200 and create build dir', async (t) => {
+  const path = await tempDir()
   try {
-    await spawnIcejaw(['--routes', '/'])
+    await spawnIcejaw(`--routes / --out ${path}`)
   } catch (err) {
     return t.fail()
   }
-  t.is(await read('./build/index.html'), 'hello world')
+  t.is(await read(`${path}/index.html`), 'hello world')
 })
 
-test.serial('should bail on 404', async (t) => {
+test('should bail on 404', async (t) => {
   try {
-    await spawnIcejaw(['--routes', '/not-found'])
+    await spawnIcejaw('--routes /not-found')
   } catch (err) {
     return t.pass()
   }
   t.fail()
 })
 
-test.serial('/foo becomes /foo.html', async (t) => {
-  await spawnIcejaw(['--routes', '/foo'])
-  t.is(await read('./build/foo.html'), 'hello foo')
+test('/foo becomes /foo.html', async (t) => {
+  const path = await tempDir()
+  await spawnIcejaw(`--routes /foo --out ${path}`)
+  t.is(await read(`${path}/foo.html`), 'hello foo')
 })
 
-test.serial('/foo/ becomes /foo/index.html', async (t) => {
-  await spawnIcejaw(['--routes', '/foo/'])
-  t.is(await read('./build/foo/index.html'), 'hello foo')
+test('/foo/ becomes /foo/index.html', async (t) => {
+  const path = await tempDir()
+  await spawnIcejaw(`--routes /foo/ --out ${path}`)
+  t.is(await read(`${path}/foo/index.html`), 'hello foo')
 })
 
 // =========================================================
@@ -93,19 +89,30 @@ test.serial('/foo/ becomes /foo/index.html', async (t) => {
 // EXTENSIONS
 
 
-test.serial('adds .html if there is no extension', async (t) => {
-  await spawnIcejaw(['--routes', '/foo'])
-  t.true(await exists('./build/foo.html'))
+test('adds .html if there is no extension', async (t) => {
+  const path = await tempDir()
+  await spawnIcejaw(`--routes /foo --out ${path}`)
+  t.true(await exists(`${path}/foo.html`))
 })
 
 
-test.serial('does not add extension if one exists', async (t) => {
-  await spawnIcejaw(['--routes', '/example.json'])
-  t.true(await exists('./build/example.json'))
+test('does not add extension if one exists', async (t) => {
+  const path = await tempDir()
+  await spawnIcejaw(`--routes /example.json --out ${path}`)
+  t.true(await exists(`${path}/example.json`))
 })
 
 
 // =========================================================
+
+
+// TEST HELPERS
+
+
+// resolves path
+function tempDir () {
+  return temp.mkdirAsync('icejaw')
+}
 
 
 // resolves string
@@ -124,7 +131,8 @@ async function exists (path) {
 }
 
 
-function spawnIcejaw (args = []) {
+function spawnIcejaw (args = '') {
+  args = args.split(/\s+/).filter(Boolean)
   args.push('--port')
   args.push('5000')
   const child = spawn('../bin/icejaw', args)

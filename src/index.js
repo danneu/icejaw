@@ -48,7 +48,7 @@ module.exports = function ({ port = program.port, concurrency = program.concurre
   })
 
   gulp.task('copy', ['clean'], () => {
-    console.log('Static assets copied from:', publicPath)
+    console.log(`Static assets copied from ${publicPath} -> ${outPath}`)
     return gulp.src(publicPath + '/**', { follow: true })
       .pipe(gulp.dest(outPath))
   })
