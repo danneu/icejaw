@@ -1,5 +1,6 @@
-
-![skull](skull.png)
+<div align="center">
+  <img src="/skull.png" alt="skull">
+</div>
 
 # icejaw [![Build Status](https://travis-ci.org/danneu/icejaw.svg?branch=master)](https://travis-ci.org/danneu/icejaw) [![NPM version](https://badge.fury.io/js/icejaw.svg)](http://badge.fury.io/js/icejaw) [![Dependency Status](https://david-dm.org/danneu/icejaw.svg)](https://david-dm.org/danneu/icejaw)
 
