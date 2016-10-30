@@ -8,7 +8,7 @@ Generate a static website from a dynamic one.
 Icejaw consumes a stream of localhost routes on stdin, crawls them
 concurrently, and spits the results into a `./build` folder.
 
-It's hopefully a more useful/configurable `wget -r`.
+The goal is a sort of `wget -r` focused on predictable, configurable builds.
 
 ## Install
 

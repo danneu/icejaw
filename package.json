@@ -5,6 +5,7 @@
   "main": "src/index.js",
   "bin": "bin/icejaw",
   "scripts": {
+    "pretest": "npm run lint",
     "test": "ava",
     "lint": "./node_modules/.bin/eslint src sql test"
   },
