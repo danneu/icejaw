@@ -20,7 +20,7 @@
     "commander": "^2.9.0",
     "event-stream": "^3.3.4",
     "gulp": "^3.9.1",
-    "isomorphic-fetch": "^2.2.1",
+    "node-fetch": "^1.6.3",
     "promise-task-queue": "^1.2.0",
     "rimraf": "^2.5.4",
     "vinyl": "^2.0.0"
