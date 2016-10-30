@@ -2,11 +2,9 @@
 // Node
 const Url = require('url')
 const Path = require('path')
-const fs = require('fs')
 // 3rd
 const es = require('event-stream')
 const program = require('commander')
-const Promise = require('bluebird')
 const rimraf = require('rimraf')
 const gulp = require('gulp')
 // 1st
@@ -16,7 +14,7 @@ program
   .version(require('../package.json').version)
   .option('--port <port>', 'server is listening on localhost', (str) => Number.parseInt(str, 10) || 3000, 3000)
   .option('--concurrency <n>', 'max number of in-flight requests', (str) => Number.parseInt(str, 10) || 8, 8)
-  .option('--public <folder>', 'name of public folder', 'public')
+  .option('--assets <folder>', 'name of public/assets folder', 'public')
   .option('--routes <routes>', '(for testing) comma-delimited routes', (str) => str.split(','))
   .parse(process.argv)
 
@@ -40,13 +38,13 @@ function intoPaths () {
 }
 
 
-module.exports = function ({ port = program.port, concurrency = program.concurrency, public = program.concurrency, routes = program.routes } = {}) {
+module.exports = function ({ port = program.port, concurrency = program.concurrency, assets = program.assets, routes = program.routes } = {}) {
   gulp.task('clean', (cb) => {
     return rimraf('build', cb)
   })
 
   gulp.task('copy', ['clean'], () => {
-    const publicPath = Path.resolve(process.cwd(), program.public)
+    const publicPath = Path.resolve(process.cwd(), assets)
     console.log('Static assets copied from:', publicPath)
     return gulp.src(publicPath + '/**', { follow: true })
       .pipe(gulp.dest('build'))

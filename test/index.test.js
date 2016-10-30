@@ -1,14 +1,14 @@
 
 const test = require('ava')
 const request = require('../src/request')
-const icejaw = require('../src')
 const app = require('koa')()
-const router = new require('koa-router')()
+const Router = require('koa-router')
 const spawn = require('child_process').spawn
 const Promise = require('bluebird')
 const fs = Promise.promisifyAll(require('fs'))
 const rimraf = Promise.promisify(require('rimraf'))
 
+const router = new Router()
 
 router
   .get('/', function * () {
@@ -24,7 +24,7 @@ const url = (route) => `http://localhost:5000${route}`
 
 // =========================================================
 
-test.afterEach.always('cleanup build directory', async (t) => {
+test.afterEach.always('cleanup build directory', async () => {
   await rimraf('./build')
 })
 

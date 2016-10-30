@@ -1,0 +1,10 @@
+{
+  "extends": "standard",
+  "rules": {
+    "no-unused-vars": [2, {
+      "varsIgnorePattern": "^debug$|^assert$|^_$",
+      "argsIgnorePattern": "^_$"
+    }],
+    "no-multiple-empty-lines": [2, { "max": 2 }]
+  }
+}

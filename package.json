@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "bin": "bin/icejaw",
   "scripts": {
-    "test": "ava"
+    "test": "ava",
+    "lint": "./node_modules/.bin/eslint src sql test"
   },
   "repository": {
     "type": "git",
@@ -31,6 +32,10 @@
   "devDependencies": {
     "ava": "^0.16.0",
     "koa": "^1.2.4",
-    "koa-router": "^5.4.0"
+    "koa-router": "^5.4.0",
+    "eslint": "^3.9.0",
+    "eslint-config-standard": "^6.2.1",
+    "eslint-plugin-promise": "^3.3.0",
+    "eslint-plugin-standard": "^2.0.1"
   }
 }

@@ -62,7 +62,7 @@ file might be sufficient if you have one.
 
 - `--port <Integer>`: The localhost post that the server is running on. Default: 3000.
 - `--concurrency <Integer>`: The number of in-flight requests to localhost allowed at a time. Default: 8.
-- `--public <String>`: Path to the folder containing static assets to be copied to the build. Maybe be absolute or relative to CWD. Default: "public".
+- `--assets <String>`: Path to the folder containing static assets to be copied to the build. Maybe be absolute or relative to CWD. Default: "public".
 - `--routes <String>`: Comma-delimited list of routes. Useful for testing/sanity-checking. Example: `--routes /,/foo,/bar`. If this is set, then stdin will be ignored.
 
 ## Static assets
