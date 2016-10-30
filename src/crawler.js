@@ -25,8 +25,7 @@ module.exports = function crawler ({ port = 3000, concurrency = 8 } = {}) {
   const queue = initQueue(concurrency)
   return es.map((route, cb) => {
     const url = `http://localhost:${port}${route}`
-    //return Promise.try(() => queue.push('request', { url, route }))
-    return queue.push('request', { url })
+    return Promise.try(() => queue.push('request', { url }))
       .then((file) => cb(null, file))
       .catch((err) => cb(err))
   })
