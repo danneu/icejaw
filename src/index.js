@@ -16,6 +16,7 @@ program
   .option('--concurrency <n>', 'max number of in-flight requests', (str) => Number.parseInt(str, 10) || 8, 8)
   .option('--assets <folder>', 'name of public/assets folder', 'public')
   .option('--routes <routes>', '(for testing) comma-delimited routes', (str) => str.split(','))
+  .option('--out <folder>', 'path to build folder', 'build')
   .parse(process.argv)
 
 
@@ -38,16 +39,18 @@ function intoPaths () {
 }
 
 
-module.exports = function ({ port = program.port, concurrency = program.concurrency, assets = program.assets, routes = program.routes } = {}) {
+module.exports = function ({ port = program.port, concurrency = program.concurrency, assets = program.assets, routes = program.routes, out = program.out } = {}) {
+  const outPath = Path.resolve(process.cwd(), out)
+  const publicPath = Path.resolve(process.cwd(), assets)
+
   gulp.task('clean', (cb) => {
-    return rimraf('build', cb)
+    return rimraf(outPath, cb)
   })
 
   gulp.task('copy', ['clean'], () => {
-    const publicPath = Path.resolve(process.cwd(), assets)
     console.log('Static assets copied from:', publicPath)
     return gulp.src(publicPath + '/**', { follow: true })
-      .pipe(gulp.dest('build'))
+      .pipe(gulp.dest(outPath))
   })
 
   gulp.task('default', ['copy'], () => {
@@ -67,7 +70,7 @@ module.exports = function ({ port = program.port, concurrency = program.concurre
       process.exit(1)
     })
 
-    return stream.pipe(gulp.dest('build'))
+    return stream.pipe(gulp.dest(outPath))
   })
 
   gulp.start()
