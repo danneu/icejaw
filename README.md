@@ -59,7 +59,7 @@ file might be sufficient if you have one.
         ├── 2.html
         └── 3.html
 
-## Options
+## CLI Options
 
 - `--port <Integer>`: The localhost post that the server is running on.
   - Default: `3000`
@@ -76,13 +76,17 @@ file might be sufficient if you have one.
   Useful for testing/sanity-checking.
   If this is set, then stdin will be ignored.
   - Example: `--routes /,/foo,/bar`
+- `--ignore404`: If this flag is set, icejaw won't stop freezing when
+  it encounters a 404 response. Instead, it will print a warning to
+  stdout and move on. No static page will be generated for the route.
+  - Default: `false`
 
-## Static assets
+## Static Assets
 
 By default, icejaw assumes your static assets are contained in a top-level
 folder named "public", and it will copy all of its contents into the build folder.
 
-## Trailing backslash
+## Trailing Backslash
 
 Whether a route ends in a backslash is an important distinction.
 
@@ -94,7 +98,7 @@ Whether a route ends in a backslash is an important distinction.
 This is consistent with, for example, how <https://surge.sh> implements
 clean URL redirection (https://surge.sh/help/using-clean-urls-automatically).
 
-## Route generation
+## Route Generation
 
 You generally need to query your database to generate a list of routes.
 

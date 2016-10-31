@@ -21,6 +21,7 @@ program
   .option('--assets <folder>', 'name of public/assets folder', 'public')
   .option('--routes <routes>', '(for testing) comma-delimited routes', (str) => str.split(','))
   .option('--out <folder>', 'path to build folder', 'build')
+  .option('--ignore404', 'icejaw will ignore 404s instead of exiting the process')
   .parse(process.argv)
 
 
@@ -43,13 +44,14 @@ function intoPaths () {
 }
 
 
-module.exports = function ({ port = program.port, concurrency = program.concurrency, assets = program.assets, routes = program.routes, out = program.out } = {}) {
+module.exports = function ({ port = program.port, concurrency = program.concurrency, assets = program.assets, routes = program.routes, out = program.out, ignore404 = !!program.ignore404 } = {}) {
   return Promise.try(() => {
     assert(Number.isInteger(port))
     assert(Number.isInteger(concurrency))
-    assert(Array.isArray(routes))
+    assert(typeof routes === 'undefined' || Array.isArray(routes))
     assert(typeof out === 'string')
     assert(typeof assets === 'string')
+    assert(typeof ignore404 === 'boolean')
 
     const outPath = Path.resolve(process.cwd(), out)
     const publicPath = Path.resolve(process.cwd(), assets)
@@ -82,7 +84,7 @@ module.exports = function ({ port = program.port, concurrency = program.concurre
       const stream = routeStream
         .pipe(dropEmpty())
         .pipe(intoPaths())
-        .pipe(crawler({ port, concurrency }))
+        .pipe(crawler({ port, concurrency, ignore404 }))
 
       stream.on('error', (err) => onReject(err))
 
