@@ -104,25 +104,47 @@ test('should bail on other non-200 responses', (t) => {
 })
 
 
-// follow | ignore | error
+// REDIRECTS (follow | ignore | error)
+
+
 test('follows redirects by default', async (t) => {
   const {out} = await makeIcejaw({
-    routes: ['/redirect']
+    routes: [
+      '/redirect',
+      '/'
+    ]
   })
   t.is(await read(`${out}/redirect.html`), 'homepage')
+  t.is(await read(`${out}/index.html`), 'homepage')
 })
+
 
 test('ignores when redirect="ignore"', async (t) => {
   const {out} = await makeIcejaw({
-    routes: ['/redirect'],
-    redirect: 'ignore'
+    redirect: 'ignore',
+    routes: [
+      '/redirect',
+      '/'
+    ]
   })
   t.false(await exists(`${out}/redirect.html`))
+  t.is(await read(`${out}/index.html`), 'homepage')
 })
 
-test('exits when redirect="error"', (t) => {
-  const promise = makeIcejaw({routes: ['/redirect'], redirect: 'error'})
+
+test('exits when redirect="error"', async (t) => {
+  const out = await tempDir()
+  const promise = makeIcejaw({
+    out,
+    redirect: 'error',
+    routes: [
+      '/redirect',
+      '/'
+    ]
+  })
   t.throws(promise, /RedirectError/)
+  t.false(await exists(`${out}/redirect.html`))
+  t.false(await exists(`${out}/index.html`))
 })
 
 
@@ -174,10 +196,10 @@ async function exists (path) {
 
 // executes icejaw and resolves into the options object
 async function makeIcejaw (opts = {}) {
-  Object.assign(opts, {
-    out: await tempDir(),
-    port: 5000
-  })
+  opts.port = 5000
+  if (!opts.out) {
+    opts.out = await tempDir()
+  }
   await icejaw(opts)
   return opts
 }
