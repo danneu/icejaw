@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 
 require('../src')()
+  .then(({out, routeCount, fileCount}) => {
+    console.log(`Project generated in ${out}`)
+    console.log(`- Routes crawled: ${routeCount}`)
+    console.log(`- Files generated: ${fileCount}`)
+  })
   .catch((err) => {
     console.error('Bailing because of an error:', err.message)
     process.exit(1)

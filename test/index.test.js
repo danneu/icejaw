@@ -169,6 +169,26 @@ test('does not add extension if one exists', async (t) => {
 // =========================================================
 
 
+test('only sees first occurrence of each route', async (t) => {
+  try {
+    var {routeCount, fileCount, out} = await makeIcejaw({
+      routes: [
+        '/foo?a=1',
+        '/foo?b=2'
+      ]
+    })
+  } catch (err) {
+    console.error(err)
+  }
+  t.is(routeCount, 1)
+  t.is(fileCount, 1)
+  t.true(await exists(`${out}/foo.html`), 'hello foo')
+})
+
+
+// =========================================================
+
+
 // TEST HELPERS
 
 
@@ -200,6 +220,6 @@ async function makeIcejaw (opts = {}) {
   if (!opts.out) {
     opts.out = await tempDir()
   }
-  await icejaw(opts)
-  return opts
+  const stats = await icejaw(opts)
+  return {...opts, ...stats}
 }

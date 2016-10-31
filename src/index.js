@@ -1,10 +1,9 @@
 
 // Node
-const Url = require('url')
 const Path = require('path')
 // 3rd
-const assert = require('better-assert')
 const es = require('event-stream')
+const assert = require('better-assert')
 const program = require('commander')
 const rimraf = require('rimraf')
 const Orchestrator = require('orchestrator')
@@ -13,6 +12,7 @@ const Promise = require('bluebird')
 const debug = require('debug')('icejaw')
 // 1st
 const crawler = require('./crawler')
+const streams = require('./streams')
 
 program
   .version(require('../package.json').version)
@@ -24,25 +24,6 @@ program
   .option('--ignore404', 'icejaw will ignore 404s instead of exiting the process')
   .option('--redirect [strategy]', 'should icejaw "follow", "ignore", or throw "error" on redirects?', 'follow')
   .parse(process.argv)
-
-
-// Trims chunks and ignores empty strings
-function dropEmpty () {
-  return es.map((data, cb) => {
-    data = data.trim()
-    if (data.length === 0) return cb()
-    cb(null, data)
-  })
-}
-
-
-// /foo -> /foo
-// http://example.com/foo -> /foo
-function intoPaths () {
-  return es.map((data, cb) => {
-    cb(null, Url.parse(data).pathname)
-  })
-}
 
 
 module.exports = function ({ port = program.port, concurrency = program.concurrency, assets = program.assets, routes = program.routes, out = program.out, ignore404 = !!program.ignore404, redirect = program.redirect } = {}) {
@@ -76,6 +57,11 @@ module.exports = function ({ port = program.port, concurrency = program.concurre
         .pipe(vfs.dest(outPath))
     })
 
+    let stats = {
+      routeCount: 0,
+      fileCount: 0
+    }
+
     orchestrator.task('default', ['copy'], () => {
       let routeStream
       if (Array.isArray(routes)) {
@@ -84,18 +70,25 @@ module.exports = function ({ port = program.port, concurrency = program.concurre
         routeStream = process.stdin.pipe(es.split())
       }
       const stream = routeStream
-        .pipe(dropEmpty())
-        .pipe(intoPaths())
+        .pipe(streams.dropEmpty())
+        .pipe(streams.intoPaths())
+        .pipe(streams.dropDupes())
+        .pipe(streams.forEach(() => { stats['routeCount'] += 1 }))
         .pipe(crawler({ port, concurrency, ignore404, redirect }))
 
+      // we need to tap the stream right here to handle any
+      // potential crawler errors for a chance to short-circuit.
+      // else the stream seem to hang.
       stream.on('error', (err) => onReject(err))
 
-      return stream.pipe(vfs.dest(outPath))
+      return stream
+        .pipe(streams.forEach(() => { stats['fileCount'] += 1 }))
+        .pipe(vfs.dest(outPath))
     })
 
     orchestrator.on('err', (err) => onReject(err))
-    orchestrator.on('stop', () => onResolve())
-    orchestrator.start((err) => err ? onReject(err) : onResolve())
+    orchestrator.on('stop', () => onResolve(stats))
+    orchestrator.start((err) => err ? onReject(err) : onResolve(stats))
 
     return deferredPromise
   })

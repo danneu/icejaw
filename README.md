@@ -2,14 +2,18 @@
   <img src="/skull.png" alt="skull">
 </div>
 
+<p align="center">
+  Generate a static website from a dynamic one.
+</p>
+
 # icejaw [![Build Status](https://travis-ci.org/danneu/icejaw.svg?branch=master)](https://travis-ci.org/danneu/icejaw) [![NPM version](https://badge.fury.io/js/icejaw.svg)](http://badge.fury.io/js/icejaw) [![Dependency Status](https://david-dm.org/danneu/icejaw.svg)](https://david-dm.org/danneu/icejaw)
 
-Generate a static website from a dynamic one.
+Icejaw is a general tool like `wget -r` that can crawl a stream of urls
+and spit out a 100% static, ready-to-deploy website in the designated folder.
 
-Icejaw consumes a stream of localhost routes on stdin, crawls them
-concurrently, and spits the results into a `./build` folder.
-
-The goal is a sort of `wget -r` focused on predictable, configurable builds.
+This way you can develop your static site with whatever dynamic technology
+you're already familiar with instead of credentializing in a more limited
+static-site-generator that may not be able to do what you want.
 
 ## Install
 
@@ -32,12 +36,14 @@ Pipe them into icejaw's stdin:
 
 Icejaw will send a GET request to each one and save the HTML
 response into the `./build` directory.
-If any response is not a 200, icejaw will exit with an error
-and no build directory will be created.
 
 Icejaw only cares about the path. `/hello` is equivalent to
 `https://example.com/hello`. For example, your `sitemap.txt`
 file might be sufficient if you have one.
+
+Query-strings are ignored. `/hello?foo=1` and `/hello?foo=bar`
+are both considered `/hello`, and only the first instance will
+trigger a crawl.
 
     $ node server.js
     Express is listening on http://localhost:3000
@@ -75,7 +81,7 @@ file might be sufficient if you have one.
 - `--routes <String>`: Comma-delimited list of routes.
   Useful for testing/sanity-checking.
   If this is set, then stdin will be ignored.
-  - Example: `--routes /,/foo,/bar`
+  - Example: `--routes "/,/foo,/bar"`
 - `--ignore404`: If this flag is set, icejaw won't stop freezing when
   it encounters a 404 response. Instead, it will print a warning to
   stdout and move on. No static page will be generated for the route.
@@ -138,6 +144,9 @@ icejaw's output with gulp plugins.*
 
 Icejaw takes an options object that's similar to the CLI API
 with the same defaults. It returns a promise.
+
+Upon success, the promise resolves into an object that has all
+of the options but also stats `pathCount`, `fileCount`.
 
 ``` javascript
 const icejaw = require('icejaw')
