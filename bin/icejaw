@@ -1,2 +1,7 @@
 #!/usr/bin/env node
+
 require('../src')()
+  .catch((err) => {
+    console.error('Bailing because of an error:', err.message)
+    process.exit(1)
+  })

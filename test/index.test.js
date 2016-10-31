@@ -1,7 +1,5 @@
 
 const test = require('ava')
-// Node
-const spawn = require('child_process').spawn
 // 3rd
 const koa = require('koa')
 const Router = require('koa-router')
@@ -10,6 +8,7 @@ const fs = Promise.promisifyAll(require('fs'))
 const temp = Promise.promisifyAll(require('temp').track())
 // 1st
 const request = require('../src/request')
+const icejaw = require('../src')
 
 
 // TEST SERVER
@@ -53,34 +52,27 @@ test('no trailing slash becomes {route}.html', async (t) => {
 })
 
 test('should pass on 200 and create build dir', async (t) => {
-  const path = await tempDir()
+  let opts
   try {
-    await spawnIcejaw(`--routes / --out ${path}`)
+    opts = await makeIcejaw({ routes: ['/'] })
   } catch (err) {
     return t.fail()
   }
-  t.is(await read(`${path}/index.html`), 'hello world')
+  t.is(await read(`${opts.out}/index.html`), 'hello world')
 })
 
-test('should bail on 404', async (t) => {
-  try {
-    await spawnIcejaw('--routes /not-found')
-  } catch (err) {
-    return t.pass()
-  }
-  t.fail()
+test('should bail on 404', (t) => {
+  t.throws(makeIcejaw({ routes: ['/not-found'] }))
 })
 
 test('/foo becomes /foo.html', async (t) => {
-  const path = await tempDir()
-  await spawnIcejaw(`--routes /foo --out ${path}`)
-  t.is(await read(`${path}/foo.html`), 'hello foo')
+  const {out} = await makeIcejaw({ routes: ['/foo'] })
+  t.is(await read(`${out}/foo.html`), 'hello foo')
 })
 
 test('/foo/ becomes /foo/index.html', async (t) => {
-  const path = await tempDir()
-  await spawnIcejaw(`--routes /foo/ --out ${path}`)
-  t.is(await read(`${path}/foo/index.html`), 'hello foo')
+  const {out} = await makeIcejaw({ routes: ['/foo/'] })
+  t.is(await read(`${out}/foo/index.html`), 'hello foo')
 })
 
 // =========================================================
@@ -90,16 +82,14 @@ test('/foo/ becomes /foo/index.html', async (t) => {
 
 
 test('adds .html if there is no extension', async (t) => {
-  const path = await tempDir()
-  await spawnIcejaw(`--routes /foo --out ${path}`)
-  t.true(await exists(`${path}/foo.html`))
+  const {out} = await makeIcejaw({ routes: ['/foo'] })
+  t.true(await exists(`${out}/foo.html`))
 })
 
 
 test('does not add extension if one exists', async (t) => {
-  const path = await tempDir()
-  await spawnIcejaw(`--routes /example.json --out ${path}`)
-  t.true(await exists(`${path}/example.json`))
+  const {out} = await makeIcejaw({ routes: ['/example.json'] })
+  t.true(await exists(`${out}/example.json`))
 })
 
 
@@ -131,20 +121,12 @@ async function exists (path) {
 }
 
 
-function spawnIcejaw (args = '') {
-  args = args.split(/\s+/).filter(Boolean)
-  args.push('--port')
-  args.push('5000')
-  const child = spawn('../bin/icejaw', args)
-  return new Promise((resolve, reject) => {
-    child.on('error', reject)
-    child.on('close', resolve)
-    child.stdout.on('data', (data) => {
-      console.log('[child]', data.toString().slice(0, -1))
-    })
-    child.stderr.on('data', (data) => {
-      console.error('[child]', data.toString().slice(0, -1))
-      reject()
-    })
+// resolves into the options object
+async function makeIcejaw (opts = {}) {
+  Object.assign(opts, {
+    out: await tempDir(),
+    port: 5000
   })
+  await icejaw(opts)
+  return opts
 }

@@ -3,10 +3,14 @@
 const Url = require('url')
 const Path = require('path')
 // 3rd
+const assert = require('better-assert')
 const es = require('event-stream')
 const program = require('commander')
 const rimraf = require('rimraf')
-const gulp = require('gulp')
+const Orchestrator = require('orchestrator')
+const vfs = require('vinyl-fs')
+const Promise = require('bluebird')
+const debug = require('debug')('icejaw')
 // 1st
 const crawler = require('./crawler')
 
@@ -40,38 +44,55 @@ function intoPaths () {
 
 
 module.exports = function ({ port = program.port, concurrency = program.concurrency, assets = program.assets, routes = program.routes, out = program.out } = {}) {
-  const outPath = Path.resolve(process.cwd(), out)
-  const publicPath = Path.resolve(process.cwd(), assets)
+  return Promise.try(() => {
+    assert(Number.isInteger(port))
+    assert(Number.isInteger(concurrency))
+    assert(Array.isArray(routes))
+    assert(typeof out === 'string')
+    assert(typeof assets === 'string')
 
-  gulp.task('clean', (cb) => {
-    return rimraf(outPath, cb)
-  })
+    const outPath = Path.resolve(process.cwd(), out)
+    const publicPath = Path.resolve(process.cwd(), assets)
 
-  gulp.task('copy', ['clean'], () => {
-    console.log(`Static assets copied from ${publicPath} -> ${outPath}`)
-    return gulp.src(publicPath + '/**', { follow: true })
-      .pipe(gulp.dest(outPath))
-  })
-
-  gulp.task('default', ['copy'], () => {
-    let routeStream
-    if (Array.isArray(routes)) {
-      routeStream = es.readArray(routes)
-    } else {
-      routeStream = process.stdin.pipe(es.split())
-    }
-    const stream = routeStream
-      .pipe(dropEmpty())
-      .pipe(intoPaths())
-      .pipe(crawler({ port, concurrency }))
-
-    stream.on('error', (err) => {
-      console.error('Bailing because of an error:', err.message)
-      process.exit(1)
+    let onResolve, onReject
+    const deferredPromise = new Promise((resolve, reject) => {
+      onResolve = resolve
+      onReject = reject
     })
 
-    return stream.pipe(gulp.dest(outPath))
-  })
+    const orchestrator = new Orchestrator()
 
-  gulp.start()
+    orchestrator.task('clean', (cb) => {
+      return rimraf(outPath, cb)
+    })
+
+    orchestrator.task('copy', ['clean'], () => {
+      debug(`Static assets copied from ${publicPath} -> ${outPath}`)
+      return vfs.src(publicPath + '/**', { follow: true })
+        .pipe(vfs.dest(outPath))
+    })
+
+    orchestrator.task('default', ['copy'], () => {
+      let routeStream
+      if (Array.isArray(routes)) {
+        routeStream = es.readArray(routes)
+      } else {
+        routeStream = process.stdin.pipe(es.split())
+      }
+      const stream = routeStream
+        .pipe(dropEmpty())
+        .pipe(intoPaths())
+        .pipe(crawler({ port, concurrency }))
+
+      stream.on('error', (err) => onReject(err))
+
+      return stream.pipe(vfs.dest(outPath))
+    })
+
+    orchestrator.on('err', (err) => onReject(err))
+    orchestrator.on('stop', () => onResolve())
+    orchestrator.start((err) => err ? onReject(err) : onResolve())
+
+    return deferredPromise
+  })
 }
