@@ -61,19 +61,19 @@ file might be sufficient if you have one.
 
 ## Options
 
-- `--port <Integer>`: The localhost post that the server is running on. 
+- `--port <Integer>`: The localhost post that the server is running on.
   - Default: `3000`
 - `--concurrency <Integer>`: The number of in-flight requests to localhost
-  allowed at a time. 
+  allowed at a time.
   - Default: `8`
 - `--assets <String>`: Path to the folder containing static assets to
-  be copied to the build. May be absolute or relative to current directory. 
+  be copied to the build. May be absolute or relative to current directory.
   - Default: `./public`
-- `--out <String>`: Path to the generated build folder.  
+- `--out <String>`: Path to the generated build folder.
   May be absolute or relative to current directory.
   - Default: `./build`
-- `--routes <String>`: Comma-delimited list of routes. 
-  Useful for testing/sanity-checking. 
+- `--routes <String>`: Comma-delimited list of routes.
+  Useful for testing/sanity-checking.
   If this is set, then stdin will be ignored.
   - Example: `--routes /,/foo,/bar`
 
@@ -123,3 +123,28 @@ Promise.try(() => {
 ```
 
     node generate.js | icejaw
+
+## Programmatic Usage (WIP)
+
+*I'm not sure how this API should look, yet. I currently only use it for
+testing. Ideally you would be able to pipe stuff into icejaw and customize
+icejaw's output with gulp plugins.*
+
+Icejaw takes an options object that's similar to the CLI API
+with the same defaults. It returns a promise.
+
+``` javascript
+const icejaw = require('icejaw')
+
+icejaw({
+  port: 5000,
+  out: './build',
+  assets: './assets',
+  concurrency: 8,
+  routes: ['/', '/users', '/faq']
+}).then(() => {
+  console.log('done')
+}).catch((err) => {
+  console.error(err)
+})
+```
