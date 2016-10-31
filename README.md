@@ -80,6 +80,8 @@ file might be sufficient if you have one.
   it encounters a 404 response. Instead, it will print a warning to
   stdout and move on. No static page will be generated for the route.
   - Default: `false`
+- `--redirect [strategy]`: is one of `follow`, `ignore`, `error`.
+  - Default: `follow`
 
 ## Static Assets
 

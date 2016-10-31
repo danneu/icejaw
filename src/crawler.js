@@ -14,18 +14,18 @@ const request = require('./request')
 
 function initQueue (concurrency) {
   const q = queue()
-  q.define('request', ({url, ignore404}) => {
-    return request(url, {ignore404})
+  q.define('request', ({url, ignore404, redirect}) => {
+    return request(url, {ignore404, redirect})
   }, { concurrency })
   return q
 }
 
 
-module.exports = function crawler ({ port = 3000, concurrency = 8, ignore404 } = {}) {
+module.exports = function crawler ({ port = 3000, concurrency = 8, ignore404, redirect } = {}) {
   const queue = initQueue(concurrency)
   return es.map((route, cb) => {
     const url = `http://localhost:${port}${route}`
-    return Promise.try(() => queue.push('request', { url, ignore404 }))
+    return Promise.try(() => queue.push('request', { url, ignore404, redirect }))
       .then((file) => cb(null, file))
       .catch((err) => cb(err))
   })

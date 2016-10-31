@@ -18,11 +18,12 @@ const app = koa()
 const router = new Router()
 
 router
-  .get('/', function * () { this.body = 'hello world' })
+  .get('/', function * () { this.body = 'homepage' })
   .get('/foo', function * () { this.body = 'hello foo' })
   .get('/example.json', function * () { this.body = { ok: true } })
   .get('/a/b/c', function * () { this.body = 'ok' })
   .get('/400', function * () { this.assert(false, 400) })
+  .get('/redirect', function * () { this.redirect('/') })
 app.use(router.routes())
 app.listen(5000)
 
@@ -65,7 +66,7 @@ test('should pass on 200 and create build dir', async (t) => {
   } catch (err) {
     return t.fail()
   }
-  t.is(await read(`${opts.out}/index.html`), 'hello world')
+  t.is(await read(`${opts.out}/index.html`), 'homepage')
 })
 
 
@@ -100,6 +101,28 @@ test('should not bail on 404 if ignore404', (t) => {
 
 test('should bail on other non-200 responses', (t) => {
   t.throws(makeIcejaw({ routes: ['/400'] }), /NotOkError/)
+})
+
+
+// follow | ignore | error
+test('follows redirects by default', async (t) => {
+  const {out} = await makeIcejaw({
+    routes: ['/redirect']
+  })
+  t.is(await read(`${out}/redirect.html`), 'homepage')
+})
+
+test('ignores when redirect="ignore"', async (t) => {
+  const {out} = await makeIcejaw({
+    routes: ['/redirect'],
+    redirect: 'ignore'
+  })
+  t.false(await exists(`${out}/redirect.html`))
+})
+
+test('exits when redirect="error"', (t) => {
+  const promise = makeIcejaw({routes: ['/redirect'], redirect: 'error'})
+  t.throws(promise, /RedirectError/)
 })
 
 
