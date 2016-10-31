@@ -145,9 +145,6 @@ icejaw's output with gulp plugins.*
 Icejaw takes an options object that's similar to the CLI API
 with the same defaults. It returns a promise.
 
-Upon success, the promise resolves into an object that has all
-of the options but also stats `pathCount`, `fileCount`.
-
 ``` javascript
 const icejaw = require('icejaw')
 

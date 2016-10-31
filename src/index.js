@@ -87,8 +87,13 @@ module.exports = function ({ port = program.port, concurrency = program.concurre
     })
 
     orchestrator.on('err', (err) => onReject(err))
-    orchestrator.on('stop', () => onResolve(stats))
-    orchestrator.start((err) => err ? onReject(err) : onResolve(stats))
+    orchestrator.start((err) => {
+      if (err) return onReject(err)
+      onResolve(Object.assign({}, stats, {
+        assets: publicPath,
+        out: outPath
+      }))
+    })
 
     return deferredPromise
   })

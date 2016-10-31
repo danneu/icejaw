@@ -220,6 +220,5 @@ async function makeIcejaw (opts = {}) {
   if (!opts.out) {
     opts.out = await tempDir()
   }
-  const stats = await icejaw(opts)
-  return {...opts, ...stats}
+  return icejaw(opts)
 }
