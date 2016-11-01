@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
 require('../src')()
-  .then(({out, routeCount, fileCount}) => {
+  .then(({out, routeCount, fileCount, assetCount}) => {
     console.log(`Project generated in ${out}`)
     console.log(`- Routes crawled: ${routeCount}`)
     console.log(`- Files generated: ${fileCount}`)
+    console.log(`- Assets copied: ${assetCount}`)
   })
   .catch((err) => {
     console.error('Bailing because of an error:', err.message)

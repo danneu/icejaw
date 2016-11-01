@@ -8,18 +8,27 @@ const es = require('event-stream')
 //
 
 
-// Executes fn() for each item that passes through
-// Doesn't mutate the items.
-function forEach (fn) {
+// passes everything through
+exports.identity = function () {
   return es.map((data, cb) => {
-    fn()
+    cb(null, data)
+  })
+}
+
+
+// Executes fn(data) for each item that passes through
+// Not meant to mutate data, but do something else with
+// side-effects.
+exports.tap = function (fn) {
+  return es.map((data, cb) => {
+    fn(data)
     cb(null, data)
   })
 }
 
 
 // Trims chunks and ignores empty strings
-function dropEmpty () {
+exports.dropEmpty = function () {
   return es.map((data, cb) => {
     data = data.trim()
     if (data.length === 0) return cb()
@@ -30,7 +39,7 @@ function dropEmpty () {
 
 // /foo -> /foo
 // http://example.com/foo -> /foo
-function intoPaths () {
+exports.intoPaths = function () {
   return es.map((data, cb) => {
     cb(null, Url.parse(data).pathname)
   })
@@ -38,7 +47,7 @@ function intoPaths () {
 
 
 // Only emits the first occurrence of each value it sees
-function dropDupes () {
+exports.dropDupes = function () {
   const seen = new Set()
 
   return es.map((data, cb) => {
@@ -46,12 +55,4 @@ function dropDupes () {
     seen.add(data)
     cb(null, data)
   })
-}
-
-
-module.exports = {
-  dropEmpty,
-  intoPaths,
-  dropDupes,
-  forEach
 }

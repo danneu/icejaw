@@ -19,7 +19,7 @@ program
   .option('--port <port>', 'server is listening on localhost', (str) => Number.parseInt(str, 10) || 3000, 3000)
   .option('--concurrency <n>', 'max number of in-flight requests', (str) => Number.parseInt(str, 10) || 8, 8)
   .option('--assets <folder>', 'name of public/assets folder', 'public')
-  .option('--routes <routes>', '(for testing) comma-delimited routes', (str) => str.split(','))
+  .option('--routes <routes>', '(for testing) comma-delimited routes', (str) => str.split(',').filter(Boolean))
   .option('--out <folder>', 'path to build folder', 'build')
   .option('--ignore404', 'icejaw will ignore 404s instead of exiting the process')
   .option('--redirect [strategy]', 'should icejaw "follow", "ignore", or throw "error" on redirects?', 'follow')
@@ -51,16 +51,24 @@ module.exports = function ({ port = program.port, concurrency = program.concurre
       return rimraf(outPath, cb)
     })
 
+    const stats = {
+      routeCount: 0, // amount of unique routes passed to crawler
+      fileCount: 0, // amount of routes that turned into generated files
+      assetCount: 0 // amount of asset files copied into --assets
+    }
+
     orchestrator.task('copy', ['clean'], () => {
       debug(`Static assets copied from ${publicPath} -> ${outPath}`)
-      return vfs.src(publicPath + '/**', { follow: true })
+      const opts = {
+        // expands symlinks
+        follow: true,
+        // ignore empty directories
+        nodir: true
+      }
+      return vfs.src(publicPath + '/**', opts)
+        .pipe(streams.tap(() => { stats['assetCount'] += 1 }))
         .pipe(vfs.dest(outPath))
     })
-
-    let stats = {
-      routeCount: 0,
-      fileCount: 0
-    }
 
     orchestrator.task('default', ['copy'], () => {
       let routeStream
@@ -73,7 +81,7 @@ module.exports = function ({ port = program.port, concurrency = program.concurre
         .pipe(streams.dropEmpty())
         .pipe(streams.intoPaths())
         .pipe(streams.dropDupes())
-        .pipe(streams.forEach(() => { stats['routeCount'] += 1 }))
+        .pipe(streams.tap(() => { stats['routeCount'] += 1 }))
         .pipe(crawler({ port, concurrency, ignore404, redirect }))
 
       // we need to tap the stream right here to handle any
@@ -82,7 +90,7 @@ module.exports = function ({ port = program.port, concurrency = program.concurre
       stream.on('error', (err) => onReject(err))
 
       return stream
-        .pipe(streams.forEach(() => { stats['fileCount'] += 1 }))
+        .pipe(streams.tap(() => { stats['fileCount'] += 1 }))
         .pipe(vfs.dest(outPath))
     })
 
