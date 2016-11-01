@@ -106,6 +106,34 @@ Whether a route ends in a backslash is an important distinction.
 This is consistent with, for example, how <https://surge.sh> implements
 clean URL redirection (https://surge.sh/help/using-clean-urls-automatically).
 
+## Watching Changes
+
+I'm not sure how to implement a `--watch` argument since I currently
+have it so that icejaw reads routes from stdin. I'll have to think about
+this.
+
+Until then, the `watch` module can be used to run an arbitrary command
+when files change.
+
+    npm install --save-dev watch
+
+In the following example, we have a dev-only `GET /routes` endpoint on
+our localhost server that returns a text/plain document of 
+`\n`-delimited routes.
+
+package.json:
+
+``` javascript
+  "scripts": {
+    "build": "http localhost:8080/routes --body | icejaw --port 8080",
+    "watch": "watch 'npm run build' src"
+  },
+```
+
+    npm run watch
+
+Now icejaw will build your project on every change.
+
 ## Route Generation
 
 You generally need to query your database to generate a list of routes.
