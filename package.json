@@ -1,7 +1,7 @@
 {
   "name": "icejaw",
   "description": "generate a static website from a dynamic one",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "main": "src/index.js",
   "bin": "bin/icejaw",
   "scripts": {
