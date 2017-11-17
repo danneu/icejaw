@@ -1,6 +1,6 @@
 const test = require('ava')
 // 3rd
-const koa = require('koa')
+const Koa = require('koa')
 const Router = require('koa-router')
 const Promise = require('bluebird')
 const fs = Promise.promisifyAll(require('fs'))
@@ -11,27 +11,27 @@ const icejaw = require('../src')
 
 // TEST SERVER
 
-const app = koa()
+const app = new Koa()
 const router = new Router()
 
 router
-    .get('/', function*() {
-        this.body = 'homepage'
+    .get('/', async ctx => {
+        ctx.body = 'homepage'
     })
-    .get('/foo', function*() {
-        this.body = 'hello foo'
+    .get('/foo', async ctx => {
+        ctx.body = 'hello foo'
     })
-    .get('/example.json', function*() {
-        this.body = { ok: true }
+    .get('/example.json', async ctx => {
+        ctx.body = { ok: true }
     })
-    .get('/a/b/c', function*() {
-        this.body = 'ok'
+    .get('/a/b/c', async ctx => {
+        ctx.body = 'ok'
     })
-    .get('/400', function*() {
-        this.assert(false, 400)
+    .get('/400', async ctx => {
+        ctx.assert(false, 400)
     })
-    .get('/redirect', function*() {
-        this.redirect('/')
+    .get('/redirect', async ctx => {
+        ctx.redirect('/')
     })
 app.use(router.routes())
 app.listen(5000)
