@@ -118,7 +118,7 @@ when files change.
     npm install --save-dev watch
 
 In the following example, we have a dev-only `GET /routes` endpoint on
-our localhost server that returns a text/plain document of 
+our localhost server that returns a text/plain document of
 `\n`-delimited routes.
 
 package.json:
@@ -146,20 +146,16 @@ faster.
 
 ``` javascript
 // generate.js
+;['/', '/users', '/faq', '/about-us'].forEach((route) => console.log(route))
 
-const Promise = require('bluebird')
-
-['/', '/users', '/faq', '/about-us'].forEach((route) => console.log(route))
-
-Promise.try(() => {
-  return db.getAllUserIds()
-}).then((ids) => {
-  ids.forEach((id) => console.log(`/users/${id}`))
-}).catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
-
+db.getAllUserIds()
+  .then((ids) => {
+    ids.forEach((id) => console.log(`/users/${id}`))
+  })
+  .catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
 ```
 
     node generate.js | icejaw
@@ -182,9 +178,5 @@ icejaw({
   assets: './assets',
   concurrency: 8,
   routes: ['/', '/users', '/faq']
-}).then(() => {
-  console.log('done')
-}).catch((err) => {
-  console.error(err)
-})
+}).then(console.log, console.error)
 ```
