@@ -22,16 +22,12 @@ function initQueue(concurrency) {
     return q
 }
 
-module.exports = function crawler(
-    { port = 3000, concurrency = 8, ignore404, redirect } = {}
-) {
+module.exports = function crawler({ port = 3000, concurrency = 8, ignore404, redirect } = {}) {
     const queue = initQueue(concurrency)
     return es.map((route, cb) => {
         const url = `http://localhost:${port}${route}`
-        return Promise.try(() =>
-            queue.push('request', { url, ignore404, redirect })
-        )
-            .then(file => cb(null, file))
-            .catch(err => cb(err))
+        return Promise.try(() => queue.push('request', { url, ignore404, redirect }))
+            .then((file) => cb(null, file))
+            .catch((err) => cb(err))
     })
 }

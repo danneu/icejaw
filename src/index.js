@@ -18,17 +18,17 @@ program
     .option(
         '--port <port>',
         'server is listening on localhost',
-        str => Number.parseInt(str, 10) || 3000,
+        (str) => Number.parseInt(str, 10) || 3000,
         3000
     )
     .option(
         '--concurrency <n>',
         'max number of in-flight requests',
-        str => Number.parseInt(str, 10) || 8,
+        (str) => Number.parseInt(str, 10) || 8,
         8
     )
     .option('--assets <folder>', 'name of public/assets folder', 'public')
-    .option('--routes <routes>', '(for testing) comma-delimited routes', str =>
+    .option('--routes <routes>', '(for testing) comma-delimited routes', (str) =>
         str.split(',').filter(Boolean)
     )
     .option('--out <folder>', 'path to build folder', 'build')
@@ -40,17 +40,15 @@ program
     )
     .parse(process.argv)
 
-module.exports = function(
-    {
-        port = program.port,
-        concurrency = program.concurrency,
-        assets = program.assets,
-        routes = program.routes,
-        out = program.out,
-        ignore404 = !!program.ignore404,
-        redirect = program.redirect,
-    } = {}
-) {
+module.exports = function({
+    port = program.port,
+    concurrency = program.concurrency,
+    assets = program.assets,
+    routes = program.routes,
+    out = program.out,
+    ignore404 = !!program.ignore404,
+    redirect = program.redirect,
+} = {}) {
     return Promise.try(() => {
         assert(Number.isInteger(port))
         assert(Number.isInteger(concurrency))
@@ -71,7 +69,7 @@ module.exports = function(
 
         const orchestrator = new Orchestrator()
 
-        orchestrator.task('clean', cb => {
+        orchestrator.task('clean', (cb) => {
             return rimraf(outPath, cb)
         })
 
@@ -120,7 +118,7 @@ module.exports = function(
             // we need to tap the stream right here to handle any
             // potential crawler errors for a chance to short-circuit.
             // else the stream seem to hang.
-            stream.on('error', err => onReject(err))
+            stream.on('error', (err) => onReject(err))
 
             return stream
                 .pipe(
@@ -131,8 +129,8 @@ module.exports = function(
                 .pipe(vfs.dest(outPath))
         })
 
-        orchestrator.on('err', err => onReject(err))
-        orchestrator.start(err => {
+        orchestrator.on('err', (err) => onReject(err))
+        orchestrator.start((err) => {
             if (err) return onReject(err)
             onResolve(
                 Object.assign({}, stats, {
