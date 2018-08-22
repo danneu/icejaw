@@ -32,10 +32,7 @@ program
         str.split(',').filter(Boolean)
     )
     .option('--out <folder>', 'path to build folder', 'build')
-    .option(
-        '--ignore404',
-        'icejaw will ignore 404s instead of exiting the process'
-    )
+    .option('--ignore404', 'icejaw will ignore 404s instead of exiting the process')
     .option(
         '--redirect [strategy]',
         'should icejaw "follow", "ignore", or throw "error" on redirects?',

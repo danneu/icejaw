@@ -1,5 +1,6 @@
 const Url = require('url')
 // 3rd
+const assert = require('better-assert')
 const es = require('event-stream')
 
 //
@@ -17,6 +18,7 @@ exports.identity = function() {
 // Not meant to mutate data, but do something else with
 // side-effects.
 exports.tap = function(fn) {
+    assert(typeof fn === 'function')
     return es.map((data, cb) => {
         fn(data)
         cb(null, data)
@@ -26,8 +28,14 @@ exports.tap = function(fn) {
 // Trims chunks and ignores empty strings
 exports.dropEmpty = function() {
     return es.map((data, cb) => {
-        data = data.trim()
-        if (data.length === 0) return cb()
+        if (typeof data === 'string') {
+            data = data.trim()
+        }
+
+        if (data.length === 0) {
+            return cb()
+        }
+
         cb(null, data)
     })
 }
@@ -45,7 +53,9 @@ exports.dropDupes = function() {
     const seen = new Set()
 
     return es.map((data, cb) => {
-        if (seen.has(data)) return cb()
+        if (seen.has(data)) {
+            return cb()
+        }
         seen.add(data)
         cb(null, data)
     })
